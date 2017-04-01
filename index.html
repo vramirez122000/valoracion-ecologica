@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Quick Start - Leaflet</title>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico"/>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+
+</head>
+<body>
+
+
+<div id="mapid" style="width: 100%; height: 800px;"></div>
+<script>
+
+    var mapElem = document.querySelector('#mapid');
+    console.log(document.documentElement.clientHeight);
+    mapElem.style.height = document.documentElement.clientHeight;
+
+    var map = L.map('mapid').setView([18.47903, -67.16239], 16);
+
+    //L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+    L.tileLayer('http://{s}.tile.openstreetmap.us/usgs_large_scale/{z}/{x}/{y}.jpg', {
+        maxZoom: 18,
+        subdomains: 'abc'
+    }).addTo(map);
+
+    var colors = {
+        'beach': '#c0695c',
+        'commercial': '#5dba56',
+        'farmland': '#c358ba',
+        'golf_course': '#b1b341',
+        'grass': '#8068cc',
+        'grassland': '#d98c3c',
+        'reef': '#678ecd',
+        'residential': '#d0473a',
+        'rock': '#50b8a2',
+        'scrub': '#c65b8a',
+        'wetland': '#568542',
+        'wood': '#977e3d'
+    };
+
+    $.getJSON("poligonos-uso-cubierta.geojson", function (data) {
+        L.geoJSON(data, {
+            style: function (feature) {
+                return {
+                    opacity: 0.8,
+                    color: colors[feature.properties.landuse]
+                };
+            }
+        }).bindPopup(function (layer) {
+            var props = layer.feature.properties;
+            return props.gid + ' (' + props.landuse + ')';
+        }).addTo(map);
+    });
+
+
+</script>
+
+
+</body>
+</html>
