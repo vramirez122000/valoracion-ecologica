@@ -1,6 +1,7 @@
-# valoracion-ecologica
-Mapa de valoración ecológica de Playuela
+# Mapa de valoración ecológica de Playuela 
 
-Hackea por una causa
+Equipo: Treehuggers, Inc.
 
-Equipo Treehuggers, Inc.
+Proyecto de evento Hackea por una causa
+
+
