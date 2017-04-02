@@ -28,8 +28,15 @@
     mapElem.style.height = '' + viewportHeight + 'px';
 
     var map = L.map('mapid').setView([18.47903, -67.16239], 16);
-    var greens = ['#f7fcfd','#e5f5f9','#ccece6','#99d8c9','#66c2a4','#41ae76','#238b45','#005824'];
+    var greens = ['#f7fcfd', '#e5f5f9', '#ccece6', '#99d8c9', '#66c2a4', '#41ae76', '#238b45', '#005824'];
 
+    /*L.tileLayer.wms("https://raster.nationalmap.gov/arcgis/services/Orthoimagery/USGS_EROS_Ortho_1Foot/ImageServer/WMSServer", {
+     layers: 'USGS_EROS_Ortho_1Foot',
+     format: 'image/jpeg'
+     //transparent: false,
+     //attribution: "USACE"
+     }).addTo(map);
+     */
     //L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
     L.tileLayer('http://{s}.tile.openstreetmap.us/usgs_large_scale/{z}/{x}/{y}.jpg', {
         maxZoom: 18,
@@ -52,18 +59,18 @@
     };
 
     /*$.getJSON("poligonos-uso-cubierta.geojson", function (data) {
-        L.geoJSON(data, {
-            style: function (feature) {
-                return {
-                    opacity: 0.9,
-                    color: colors[feature.properties.landuse]
-                };
-            }
-        }).bindPopup(function (layer) {
-            var props = layer.feature.properties;
-            return props.gid + ' (' + props.landuse + ')';
-        }).addTo(map);
-    });*/
+     L.geoJSON(data, {
+     style: function (feature) {
+     return {
+     opacity: 0.9,
+     color: colors[feature.properties.landuse]
+     };
+     }
+     }).bindPopup(function (layer) {
+     var props = layer.feature.properties;
+     return props.gid + ' (' + props.landuse + ')';
+     }).addTo(map);
+     });*/
 
     $.getJSON("poligonos-valor.geojson", function (data) {
         var stats = new geostats(data.features.map(function (feature) {
@@ -71,7 +78,7 @@
         }));
         var jenks = stats.getClassJenks(greens.length);
 
-        L.geoJSON(data, {
+        var geoJsonLyr = L.geoJSON(data, {
             style: function (feature) {
                 var greenIdx = stats.getRangeNum(feature.properties.usd_per_ha)
                 return {
@@ -90,7 +97,9 @@
             html += 'Área en Hectáreas: <span style="font-weight: bold">' + (Math.round(props.area_ha * 10) * 0.1) + '</span><br/>';
             html += 'Valor Anual por Hectárea: <span style="font-weight: bold">$' + (Math.round(props.usd_per_ha * 100) * 0.01) + '</span><br/>';
             return html;
-        }).addTo(map);
+        });
+        geoJsonLyr.addTo(map);
+        L.control.layers([], {'Valoración Ecológica': geoJsonLyr}).addTo(map);
     });
 
 
