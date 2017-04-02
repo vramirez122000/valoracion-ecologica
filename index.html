@@ -69,14 +69,18 @@
 
     $.getJSON("poligonos-valor.geojson", function (data) {
         var stats = new geostats(data.features.map(function (feature) {
-            return Number(feature.properties['usd_per_ha']);
+            return Number(feature.properties.usd_per_ha);
         }));
+        var jenks = stats.getClassJenks(greens.length);
 
         L.geoJSON(data, {
             style: function (feature) {
+                var greenIdx = stats.getRangeNum(feature.properties.usd_per_ha)
                 return {
                     opacity: 0.9,
-                    color: colors[feature.properties.landuse]
+                    fillOpacity: 0.9,
+                    color: greens[greenIdx],
+                    fillColor: greens[greenIdx]
                 };
             }
         }).bindPopup(function (layer) {
