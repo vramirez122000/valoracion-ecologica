@@ -92,15 +92,26 @@
             var props = layer.feature.properties;
             var html = '';
             html += 'ID Polígono: <span style="font-weight: bold">' + props.gid + '</span><br/>';
-            html += 'Categoría de uso o cubierta: <span style="font-weight: bold">' + props.landuse + '</span><br/>';
-            html += 'Valor Ecológico Anual: <span style="font-weight: bold">$' + (Math.round(props.total_assess_val * 100) * 0.01) + '</span><br/>';
-            html += 'Área en Hectáreas: <span style="font-weight: bold">' + (Math.round(props.area_ha * 10) * 0.1) + '</span><br/>';
-            html += 'Valor Anual por Hectárea: <span style="font-weight: bold">$' + (Math.round(props.usd_per_ha * 100) * 0.01) + '</span><br/>';
+            html += 'Descripción: <span style="font-weight: bold">' + props.description + '</span><br/>';
+            html += 'Valor Ecológico Anual: <span style="font-weight: bold">$' + formatMoney(props.total_assess_val, 2) + '</span><br/>';
+            html += 'Área en Hectáreas: <span style="font-weight: bold">' + props.area_ha.toFixed(1) + '</span><br/>';
+            html += 'Valor Anual por Hectárea: <span style="font-weight: bold">$' + formatMoney(props.usd_per_ha, 2) + '</span><br/>';
             return html;
         });
         geoJsonLyr.addTo(map);
         L.control.layers([], {'Valoración Ecológica': geoJsonLyr}).addTo(map);
     });
+
+
+    function formatMoney(n, c, d, t){
+        var c = isNaN(c = Math.abs(c)) ? 2 : c,
+            d = d == undefined ? "." : d,
+            t = t == undefined ? "," : t,
+            s = n < 0 ? "-" : "",
+            i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
+            j = (j = i.length) > 3 ? j % 3 : 0;
+        return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+    };
 
 
 </script>
