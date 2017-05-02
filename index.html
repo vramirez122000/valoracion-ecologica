@@ -10,10 +10,19 @@
     <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico"/>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="style.css"/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
     <script src="geostats.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"
             integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/esri-leaflet@2.0.8"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
 
 </head>
@@ -21,70 +30,74 @@
 
 
 <div id="mapid" style="width: 100%; height: 800px; margin: 0; padding: 0; border: 0"></div>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Mapa interactivo de valor ecológico del Sector Playuela de Aguadilla, Puerto Rico</h4>
+            </div>
+            <div class="modal-body">
+                <p>Bienvenido al mapa valoración ecológica del Sector Playuela de Aguadilla, Puerto Rico.
+                    El mapa ilustra el valor anual de los servicios ecológicos que ofrecen los ecosistemas
+                    del Sector. A mayor intensidad de verde, mayor el valor que nos brinda la naturaleza.
+                    Este proyecto fue producto de un esfuerzo colaborativo
+                    de <a href="http://www.harimauconservation.org/">Harimau Conservation</a>,
+                <a href="http://zipdatumpro.azurewebsites.net/">Zip Datum</a>,
+                    y <a href="http://codedsandp.com/">Coded S+P Corp</a></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Ver el mapa</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 <script>
 
     var mapElem = document.querySelector('#mapid');
     var viewportHeight = document.documentElement.clientHeight;
     mapElem.style.height = '' + viewportHeight + 'px';
 
-    var map = L.map('mapid').setView([18.47903, -67.16239], 16);
+    var map = L.map('mapid').setView([18.47999, -67.16010], 15);
     var greens = ['#f7fcfd', '#e5f5f9', '#ccece6', '#99d8c9', '#66c2a4', '#41ae76', '#238b45', '#005824'];
+    var vectorLayers = {};
 
-    /*L.tileLayer.wms('https://raster.nationalmap.gov/arcgis/services/Orthoimagery/USGS_EROS_Ortho_1Foot/ImageServer/WMSServer?', {
-        layers: 'USGS_EROS_Ortho_1Foot',
-        format: 'image/jpeg',
-        version: '1.3.0'
-        //transparent: false,
-        //attribution: "USACE"
-    }).addTo(map);*/
-    
-    /*L.tileLayer('http://{s}.tile.openstreetmap.us/usgs_large_scale/{z}/{x}/{y}.jpg', {
-        maxZoom: 18,
-        subdomains: 'abc'
-    }).addTo(map);*/
+    L.tileLayer('http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {})
+        .addTo(map);
 
-    L.tileLayer('http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            
-    }).addTo(map);
+    var LegendControl = L.Control.extend({
+        options: {
+            position: 'bottomleft'
+        },
 
-    var colors = {
-        'beach': '#b35806',
-        'commercial': '#5dba56',
-        'farmland': '#c358ba',
-        'golf_course': '#fdb863',
-        'grass': '#8068cc',
-        'grassland': '#d98c3c',
-        'reef': '#678ecd',
-        'residential': '#d0473a',
-        'rock': '#50b8a2',
-        'scrub': '#c65b8a',
-        'wetland': '#568542',
-        'wood': '#977e3d'
-    };
+        onAdd: function (map) {
+            // create the control container with a particular class name
+            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            container.id = 'div-legend';
+            container.style.backgroundColor = 'white';
+            container.style.padding = '5px';
+            return container;
+        }
+    });
+    map.addControl(new LegendControl());
 
-    /*$.getJSON("poligonos-uso-cubierta.geojson", function (data) {
-     L.geoJSON(data, {
-     style: function (feature) {
-     return {
-     opacity: 0.9,
-     color: colors[feature.properties.landuse]
-     };
-     }
-     }).bindPopup(function (layer) {
-     var props = layer.feature.properties;
-     return props.gid + ' (' + props.landuse + ')';
-     }).addTo(map);
-     });*/
 
     $.getJSON("poligonos-valor.geojson", function (data) {
         var stats = new geostats(data.features.map(function (feature) {
-            return Number(feature.properties.usd_per_ha);
+            return Number(feature.properties.usd_per_ha.toFixed(2));
         }));
-        var jenks = stats.getClassJenks(greens.length);
+        stats.getClassJenks(greens.length);
+        document.getElementById('div-legend').innerHTML = stats.getHtmlLegend(greens, 'Leyenda ($ / ha)');
 
         var geoJsonLyr = L.geoJSON(data, {
             style: function (feature) {
-                var greenIdx = stats.getRangeNum(feature.properties.usd_per_ha)
+                var greenIdx = stats.getRangeNum(feature.properties.usd_per_ha.toFixed(2));
                 return {
                     opacity: 0.9,
                     fillOpacity: 0.8,
@@ -103,11 +116,59 @@
             return html;
         });
         geoJsonLyr.addTo(map);
-        L.control.layers([], {'Valoración Ecológica': geoJsonLyr}).addTo(map);
+        vectorLayers['Valoración Ecológica'] = geoJsonLyr;
+        L.control.layers([], vectorLayers).addTo(map);
     });
 
+    var catastroPropSubset = {
+        'OLDPID': 'Número de parcela previo',
+        'NUM_CATASTRO': 'Número de parcela',
+        'CATASTRO': 'Número de catastro',
+        'CONTACT': 'Dueño',
+        'DIRECCION_FISICA': 'Dir. física',
+        'DIRECCION_POSTAL': 'Dir. postal',
+        'CABIDA': 'Cabida',
+        'LAND': 'Tasación del terreno (CRIM)',
+        'STRUCTURE': 'Tasación de estructuras (CRIM)',
+        'MACHINERY': 'Tasación de maquinaria (CRIM)',
+        'EXEMP': 'Exención (CRIM)',
+        'EXON': 'Exoneración (CRIM)',
+        'DEEDBOOK': 'Tomo (Registro de la Propiedad)',
+        'DEEDPAGE': 'Folio (Registro de la Propiedad)',
+        'DEEDNUM': 'Escritura (Registro de la Propiedad)',
+        'ESTATE': 'Finca (Registro de la Propiedad)',
+        'SALESAMT': 'Precio de venta',
+        'SALESDTTM': 'Fecha de venta',
+        'SELLERNAME': 'Vendedor',
+        'BYERNAME': 'Comprador'
+    };
+    var catastro = L.esri.featureLayer({
+        url: 'https://www.satasgis.crimpr.net/cdprpc/Proxy/proxy.ashx?https://www.satasgis.crimpr.net/crimgis/rest/services/Mapas_Seguros/Parcelas_Secured/FeatureServer/0',
+        where: "CONTACT like 'caribbean management%'",
+        style: function () {
+            return {
+                fill: true,
+                weight: 1,
+                color: '#FFFF00'
+            }
+        },
+        onEachFeature: function (feature, layer) {
+            var html = '<table>';
+            for (var prop in feature.properties) {
+                if (!feature.properties.hasOwnProperty(prop)
+                || !(prop in catastroPropSubset)) {
+                    continue;
+                }
+                html += '<tr><td>' + catastroPropSubset[prop] + ':</td><td>' + feature.properties[prop] + '</td></tr>';
+            }
+            html += '</table>';
+            layer.bindPopup(html, { maxWidth: 700 });
+        }
+    });
+    vectorLayers['Catastro'] = catastro;
+    $("#myModal").modal();
 
-    function formatMoney(n, c, d, t){
+    function formatMoney(n, c, d, t) {
         var c = isNaN(c = Math.abs(c)) ? 2 : c,
             d = d == undefined ? "." : d,
             t = t == undefined ? "," : t,
@@ -115,11 +176,10 @@
             i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))),
             j = (j = i.length) > 3 ? j % 3 : 0;
         return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
-    };
+    }
 
 
 </script>
-
 
 </body>
 </html>

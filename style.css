@@ -1,0 +1,11 @@
+.geostats-legend-block {
+    width: 20px;
+    height: 10px;
+    display: inline-block;
+    opacity: 0.7;
+}
+
+.geostats-legend-title {
+    font-weight: bold;
+}
+
